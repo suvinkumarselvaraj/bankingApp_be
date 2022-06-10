@@ -1,3 +1,5 @@
-com\zoho\database\Database.class
 com\zoho\userClass\Users.class
 com\zoho\web\UserServlet.class
+com\zoho\userClass\Admin.class
+com\zoho\database\Database.class
+com\zoho\web\AdminServlet.class

@@ -11,10 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+
 public class Database {
     String insertUserQuery = "INSERT INTO accounts(account_number, name, balance,phone_no) VALUES(?,?,?,?)";
     String userQuery = "SELECT * FROM accounts";
     String particularUserQuery = "SELECT * FROM accounts WHERE account_number = ?";
+    String particularUserThroughIdQuery = "SELECT * FROM transactions WHERE customer_id = ?";
     String ifPresentQuery = "SELECT customer_id FROM accounts WHERE phone_no = ?";
     String returnUserIdQuery = "SELECT customer_id FROM accounts WHERE account_number = ?";
     String returnCountQuery = "SELECT COUNT(*) FROM accounts";
@@ -24,15 +29,175 @@ public class Database {
     String lastransactionType = "SELECT transaction_type FROM transactions WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
     String lastransactionDateQuery = "SELECT created_at FROM transactions WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
     String lastPasswordDateQuery = "SELECT created_at FROM password_history WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
-    String isValidPasswordQuery = "SELECT customer_id FROM accounts WHERE customer_id = ? AND user_password = (SELECT password_id FROM password_history WHERE customer_id = ? AND password = ?";     
+    String isValidPasswordQuery = "SELECT customer_id FROM accounts WHERE customer_id = ? AND user_password = (SELECT password_id FROM password_history WHERE customer_id = ? AND password = ?)";     
     String insertIntoTransactions = "INSERT INTO transactions(customer_id,transaction_type,transaction_amount,balance) VALUES(?,?,?,?)";
     String updateAccountsQuery = "UPDATE accounts SET balance = ? WHERE customer_id = ?";
+    String returnBalance = "SELECT customer_id, balance FROM accounts WHERE account_number = ?";
+    String returnAccountNumber = "SELECT account_number FROM accounts";
+    String checkPasswordQuery = "SELECT password from password_history WHERE customer_id = ? ";
+    String passwordCountQuery = "SELECT COUNT(*) FROM password_history WHERE customer_id = ?";
+    String deleteLastPassword = "DELETE FROM password_history where password_id = (SELECT password_id FROM password_history WHERE customer_id  = ? ORDER BY created_at LIMIT 1)";
+    String userInfoString = "SELECT * FROM accounts WHERE account_number = ?  AND user_password = (SELECT password_id FROM password_history WHERE password = ? AND customer_id = ?)";
+
+    //admin section
+    String adminValidatorString = "SELECT admin_name FROM admins WHERE admin_email = ? AND admin_password = ?";
+
+
+    
+
 
     public Connection returnConnection() throws ClassNotFoundException, SQLException{
         Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection("jdbc:mysql://localhost:3306/banking-app-test", "root", "");
     }
 
+    //SEND ALL USERS
+        public JSONArray sendAllUsers(){
+            Connection con = null;
+            PreparedStatement pst = null;
+            JSONArray jArray = new JSONArray();
+            try{
+                con = returnConnection();
+                pst = con.prepareStatement(userQuery);
+                ResultSet rst = pst.executeQuery();
+                
+                while(rst.next()){
+                    JSONObject jObject = new JSONObject();
+                    jObject.put("customer_id",rst.getInt(1));
+                    jObject.put("account_number",rst.getLong(2));
+                    jObject.put("name",rst.getString(3));
+                    jObject.put("balance",rst.getLong(4));
+                    jObject.put("phoneNo",rst.getLong(5));
+                    jObject.put("created_at",rst.getDate(7));
+                    jArray.put(jObject);
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            return jArray;
+        }
+    //validate admin
+    public String validateAdmin(String email, String password){
+        Connection con = null;
+        PreparedStatement pst = null;
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(adminValidatorString);
+
+        System.out.println("admin validation");
+            pst.setString(1, email);
+            pst.setString(2, password);
+            System.out.println("post admin validation");
+            ResultSet rst = pst.executeQuery();
+           
+            if(rst.next())
+            return rst.getString("admin_name");
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    //login handler
+    public Users loginValidate(long accountNumber, String password ){
+        Connection con = null;
+        PreparedStatement pst = null;
+
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(userInfoString);
+            pst.setLong(1,accountNumber);
+            pst.setString(2, password);
+            int customerId = returnId(accountNumber);
+            pst.setLong(3, customerId);
+            ResultSet rst = pst.executeQuery();
+            if(rst.next()){
+                return new Users(customerId,accountNumber,rst.getString("name"),rst.getLong("phone_no"),rst.getLong("balance"),rst.getTimestamp("created_at"));
+            }
+        }catch(Exception e ){
+            e.printStackTrace();
+        }
+        return null;
+    }
+    //delete last passowrd
+    public void deleteLastPassword(int customerId){
+        Connection con = null;
+        PreparedStatement pst = null;
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(deleteLastPassword);
+            pst.setInt(1, customerId);
+            pst.executeUpdate();
+        }catch(Exception e ){}
+    }
+    //checkif the entered password matches with the passwords from password history
+    public boolean checkIfPasswordMatches(long accountNumber, String newPassword){
+
+        System.out.println("line 64 in db class checking for matching password");
+        System.out.println(newPassword);
+        int id = returnId(accountNumber);
+        System.out.println(id);
+        System.out.println(accountNumber);
+        Connection con = null;
+        PreparedStatement pst = null;
+        try
+        {
+            con = returnConnection();
+            pst = con.prepareStatement(checkPasswordQuery);
+            pst.setInt(1, id);
+            ResultSet rst = pst.executeQuery();
+        System.out.println("im hereeeeeeeeee");
+             while(rst.next()){
+            String password = rst.getString(1);
+            if(password.equals(newPassword))
+            return true;
+        }   
+    }catch(Exception e){
+        e.printStackTrace();
+    }
+        return false;
+    }
+    public JSONArray returnUserThroughId(int customer_id){
+        Connection con = null;
+        PreparedStatement pst = null;
+        JSONArray jArray = new JSONArray();
+        System.out.println("im here");
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(particularUserThroughIdQuery);
+            pst.setInt(1, customer_id);
+            ResultSet rst = pst.executeQuery();
+            while (rst.next())
+            {
+            JSONObject jObject = new JSONObject();
+            jObject.put("transactionType",rst.getString(2));
+            jObject.put("amount",rst.getLong(3));
+            jObject.put("balance",rst.getLong(4));
+            jObject.put("date",rst.getDate(5));
+            jArray.put(jObject);
+            }
+    }
+    catch(Exception e){
+        e.printStackTrace();
+    }
+    return jArray;
+}
+    //return balance according to account number
+    public long returnBalance(long accountNumber){
+        Connection con = null;
+        PreparedStatement pst = null;
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(returnBalance);
+            pst.setLong(1, accountNumber);
+            ResultSet rst = pst.executeQuery();
+            rst.next();
+            return rst.getLong(1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
     public long generateAccountNumber(){
         Connection con = null;
         PreparedStatement pst = null;
@@ -54,7 +219,30 @@ public class Database {
         }
         return 1;
     }
+    //return all accountNumber
+    public JSONArray returnAvailableCustomers(){
+        Connection con = null;
+        PreparedStatement  pst = null;
+        JSONArray array = new JSONArray();
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(returnAccountNumber);
+            ResultSet rst = pst.executeQuery();
+            while(rst.next() ){
+                JSONObject jObject = new JSONObject();
+                Long acc = rst.getLong(1);
+                jObject.put("accountNumber",acc);
+                array.put(jObject);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        System.out.println(array);
+        return array;
 
+
+    }
+    //return id to a account number
     public int returnId(long accountNumber){
         Connection con = null;
         PreparedStatement  pst = null;
@@ -72,9 +260,26 @@ public class Database {
         return -1;
     }
 
+    public boolean checkPasswordCount(int customer_id){
+        Connection con = null;
+        PreparedStatement pst = null;
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(passwordCountQuery);
+            pst.setInt(1, customer_id);
+            ResultSet rst = pst.executeQuery();
+            rst.next();
+            if(rst.getInt(1)==3)
+            return true;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
     public void insertPasswordIntoPasswordHistory(int customerId,String password){
         Connection con = null;
         PreparedStatement pst = null;
+        //find the count of passwords from the transaction_history db
         try{
             con = returnConnection();
             pst = con.prepareStatement(passwordInsertQuery);
@@ -100,9 +305,11 @@ public class Database {
     }
 //inserting the user 
     public Users insertUser(Users user)throws Exception{
+        
+        System.out.println("im called");
+        System.out.println(checkIfUserPresent(user.username, user.phoneNumber));
         if(checkIfUserPresent(user.username, user.phoneNumber))
         return null;
-
         Connection con = null;
         PreparedStatement pst = null;
         long accountNumber = generateAccountNumber();
@@ -118,7 +325,7 @@ public class Database {
             
             //get the id            
             int customerId = returnId(accountNumber);
-
+            System.out.println(customerId);
             //INSERT PASSWORD INTO THE PASSWORD_HISTORY 
             insertPasswordIntoPasswordHistory(customerId, user.password);
 
@@ -135,7 +342,7 @@ public class Database {
             pst.close();
             con.close();
         }
-        return new Users();
+        return null;
     }
     public int getUserid(long accountNumber){
 
@@ -150,9 +357,13 @@ public class Database {
             
             pst = con.prepareStatement(ifPresentQuery);
             pst.setLong(1, phoneNumber);
+            System.out.println(phoneNumber);
             ResultSet rst = pst.executeQuery();
-            if(rst.next())
+
+            System.out.println(rst.next());
+            if(rst.next())  
             return true;
+
             return false;
         }catch(Exception e){
             e.printStackTrace();
@@ -192,6 +403,7 @@ public class Database {
         try{
             con = returnConnection();
             pst = con.prepareStatement(lastransactionType);
+            pst.setInt(1, id);
             ResultSet rst = pst.executeQuery();
             rst.next();
             if(rst.getString(1).equals("Maintenance fee ="))
@@ -218,6 +430,7 @@ public class Database {
             if(!returnIsMaintenance(id))
             {   //if not check for the transaction count
                 pst = con.prepareStatement(checkTransactionCountQuery);
+                pst.setInt(1, id);
                 ResultSet rst = pst.executeQuery();
                 rst.next();
                 int total = rst.getInt(1);
@@ -239,6 +452,7 @@ public class Database {
         try{
             con = returnConnection();
             pst = con.prepareStatement(query);
+            pst.setInt(1, id);
             ResultSet rst = pst.executeQuery();
             rst.next();
             return rst.getTimestamp(1);
