@@ -81,7 +81,29 @@ public class UserServlet extends HttpServlet{
                 e.printStackTrace();
             }
     }
+    //find out the places to do encryption
+    //1. login
+    //2. open account
+    //3. check password
     //login
+
+    public String encryptPassword(String password){
+        String encryptedString = new String();
+        for(int i=0;i<password.length();i++){ 
+            if(password.charAt(i)=='9'){
+                encryptedString+='0';
+            }
+            else
+            if(password.charAt(i)=='Z')
+            encryptedString+='A';
+            else
+            if(password.charAt(i)=='z')
+            encryptedString+='a';
+            else
+			encryptedString+=(char)(password.charAt(i)+1); 
+		} 
+        return encryptedString;
+    }
     public void login(HttpServletRequest req, HttpServletResponse res) throws IOException{
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
             Collectors.joining("\n"));
@@ -89,7 +111,10 @@ public class UserServlet extends HttpServlet{
             System.out.println(jObj);
             Long accountNumber = jObj.getLong("accountNumber");
             String password = jObj.getString("password");
+            password = encryptPassword(password);
             Users loggedUser = new Database().loginValidate(accountNumber, password);
+
+
             if(loggedUser!=null){
                 jObj.put("status", "success");
                 jObj.put("username", loggedUser.username);
@@ -113,7 +138,7 @@ public class UserServlet extends HttpServlet{
             long accountNumber =jObj.getLong("accountNumber");
             
             String newPassword =jObj.getString("nPass");
-            
+            newPassword = encryptPassword(newPassword);
             int id = new Database().returnId(accountNumber);
             //check if the new password entered matches the old passwords
             
@@ -232,6 +257,7 @@ public class UserServlet extends HttpServlet{
         
         Long accountNumber = jObj.getLong("accountNumber");
         String password = jObj.getString("oPass");
+        password = encryptPassword(password);
         System.out.print("inside password check");
         //call a function with the old password that goes to the db to retrieve the latest password to validate
         if(new Database().isValidPassword(accountNumber,password)){
@@ -279,8 +305,9 @@ public class UserServlet extends HttpServlet{
         System.out.println(jObj);
         String username = jObj.getString("username");
         String password = jObj.getString("password");
+        password = encryptPassword(password);
         Long phoneNumber =Long.parseLong(jObj.getString("phone"));
-        Long balance = 10000l;
+        Long balance = 0l;
         Users newUser = new Users(username,password,phoneNumber,balance);
         Database db = new Database();
         System.out.println("about to call the database class");
