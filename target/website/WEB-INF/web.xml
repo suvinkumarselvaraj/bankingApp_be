@@ -119,7 +119,7 @@
   
   <servlet>
     <servlet-name>
-      checktransactions
+       checktransactions
     </servlet-name>
     <servlet-class>
       com.zoho.web.UserServlet
@@ -199,6 +199,40 @@
     </servlet-name>
     <url-pattern>
       /allUsers
+    </url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>
+      maintenance
+    </servlet-name>
+    <servlet-class>
+      com.zoho.web.UserServlet
+    </servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>
+      maintenance
+    </servlet-name>
+    <url-pattern>
+      /maintenancefee
+    </url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>
+      deletehistory
+    </servlet-name>
+    <servlet-class>
+      com.zoho.web.UserServlet
+    </servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>
+      deletehistory
+    </servlet-name>
+    <url-pattern>
+      /deletehistory
     </url-pattern>
   </servlet-mapping>
 </web-app>

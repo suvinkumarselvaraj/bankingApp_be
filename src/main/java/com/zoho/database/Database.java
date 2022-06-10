@@ -38,21 +38,55 @@ public class Database {
     String passwordCountQuery = "SELECT COUNT(*) FROM password_history WHERE customer_id = ?";
     String deleteLastPassword = "DELETE FROM password_history where password_id = (SELECT password_id FROM password_history WHERE customer_id  = ? ORDER BY created_at LIMIT 1)";
     String userInfoString = "SELECT * FROM accounts WHERE account_number = ?  AND user_password = (SELECT password_id FROM password_history WHERE password = ? AND customer_id = ?)";
-
+    String lastTransactionAmountQuery = "SELECT transaction_amount FROM transactions WHERE customer_id = ? ORDER BY created_at DESC";
+    String deleteFromTransactionHistory = "DELETE FROM transactions WHERE customer_id = ? ORDER BY created_at DESC";
     //admin section
-    String adminValidatorString = "SELECT admin_name FROM admins WHERE admin_email = ? AND admin_password = ?";
-
-
     
-
+    String adminValidatorString = "SELECT admin_name FROM admins WHERE admin_email = ? AND admin_password = ?";
 
     public Connection returnConnection() throws ClassNotFoundException, SQLException{
         Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection("jdbc:mysql://localhost:3306/banking-app-test", "root", "");
     }
-
+    public void deleteHistory(int customerId) throws SQLException{
+        Connection con = null;
+        PreparedStatement pst = null;
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(deleteFromTransactionHistory);
+            pst.setInt(1, customerId);
+            pst.executeUpdate();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        finally{
+            pst.close();
+            con.close();
+        }
+    }
+    //maintenance amount check
+    public boolean checkLastMaintenanceAmount(int customerId) throws SQLException{
+        Connection con = null;
+        PreparedStatement pst = null;
+        try{
+            con = returnConnection();
+            pst = con.prepareStatement(lastTransactionAmountQuery);
+            pst.setInt(1, customerId);
+            ResultSet  rst = pst.executeQuery();
+            if(rst.next())
+            {   if(rst.getLong(1)==100)
+                return true;
+            }
+        }catch(Exception e ){
+            e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
+        }
+        return false;
+    }
     //SEND ALL USERS
-        public JSONArray sendAllUsers(){
+        public JSONArray sendAllUsers() throws SQLException{
             Connection con = null;
             PreparedStatement pst = null;
             JSONArray jArray = new JSONArray();
@@ -73,11 +107,14 @@ public class Database {
                 }
             }catch(Exception e){
                 e.printStackTrace();
+            }finally{
+                // pst.close();
+                // con.close();
             }
             return jArray;
         }
     //validate admin
-    public String validateAdmin(String email, String password){
+    public String validateAdmin(String email, String password) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -94,12 +131,15 @@ public class Database {
             return rst.getString("admin_name");
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         return null;
     }
 
     //login handler
-    public Users loginValidate(long accountNumber, String password ){
+    public Users loginValidate(long accountNumber, String password ) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
 
@@ -116,11 +156,14 @@ public class Database {
             }
         }catch(Exception e ){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         return null;
     }
     //delete last passowrd
-    public void deleteLastPassword(int customerId){
+    public void deleteLastPassword(int customerId) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -128,10 +171,14 @@ public class Database {
             pst = con.prepareStatement(deleteLastPassword);
             pst.setInt(1, customerId);
             pst.executeUpdate();
-        }catch(Exception e ){}
+        }catch(Exception e ){e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
+        }
     }
     //checkif the entered password matches with the passwords from password history
-    public boolean checkIfPasswordMatches(long accountNumber, String newPassword){
+    public boolean checkIfPasswordMatches(long accountNumber, String newPassword) throws SQLException{
 
         System.out.println("line 64 in db class checking for matching password");
         System.out.println(newPassword);
@@ -154,10 +201,13 @@ public class Database {
         }   
     }catch(Exception e){
         e.printStackTrace();
+    }finally{
+        pst.close();
+        con.close();
     }
         return false;
     }
-    public JSONArray returnUserThroughId(int customer_id){
+    public JSONArray returnUserThroughId(int customer_id) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         JSONArray jArray = new JSONArray();
@@ -179,11 +229,14 @@ public class Database {
     }
     catch(Exception e){
         e.printStackTrace();
+    }finally{
+        pst.close();
+        con.close();
     }
     return jArray;
 }
     //return balance according to account number
-    public long returnBalance(long accountNumber){
+    public long returnBalance(long accountNumber) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -195,10 +248,13 @@ public class Database {
             return rst.getLong(1);
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         return 0;
     }
-    public long generateAccountNumber(){
+    public long generateAccountNumber() throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -215,12 +271,13 @@ public class Database {
             e.printStackTrace();
         }
         finally{
-        
+            pst.close();
+            con.close();
         }
         return 1;
     }
     //return all accountNumber
-    public JSONArray returnAvailableCustomers(){
+    public JSONArray returnAvailableCustomers() throws SQLException{
         Connection con = null;
         PreparedStatement  pst = null;
         JSONArray array = new JSONArray();
@@ -236,6 +293,9 @@ public class Database {
             }
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         System.out.println(array);
         return array;
@@ -243,7 +303,7 @@ public class Database {
 
     }
     //return id to a account number
-    public int returnId(long accountNumber){
+    public int returnId(long accountNumber) throws SQLException{
         Connection con = null;
         PreparedStatement  pst = null;
         try{
@@ -256,11 +316,14 @@ public class Database {
             return id;
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         return -1;
     }
 
-    public boolean checkPasswordCount(int customer_id){
+    public boolean checkPasswordCount(int customer_id) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -273,10 +336,13 @@ public class Database {
             return true;
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         return false;
     }
-    public void insertPasswordIntoPasswordHistory(int customerId,String password){
+    public void insertPasswordIntoPasswordHistory(int customerId,String password) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         //find the count of passwords from the transaction_history db
@@ -288,9 +354,12 @@ public class Database {
             pst.executeUpdate();
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
     }
-    public void updateAccountPassword(int customerId){
+    public void updateAccountPassword(int customerId) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -301,6 +370,9 @@ public class Database {
             pst.executeUpdate();
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
     }
 //inserting the user 
@@ -419,7 +491,7 @@ public class Database {
     }
 
     //check transaction count
-    public int returnTransactionCount(long accountNumber){
+    public int returnTransactionCount(long accountNumber) throws SQLException{
         //find the id of the account number
         Connection con = null;
         PreparedStatement pst = null;
@@ -436,17 +508,22 @@ public class Database {
                 int total = rst.getInt(1);
                 // if( total%10 ==0 && total%5 == 0)
                 // return 105;
-                if(total%5==0)
-                return 5;
                 if(total%10==0)
                 return 10;  
+
+                if(total%5==0)
+                return 5;
+                
         }
      }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         return 0;
     }
-    public Timestamp returnCreatedAt(String query, int id){
+    public Timestamp returnCreatedAt(String query, int id) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -458,11 +535,14 @@ public class Database {
             return rst.getTimestamp(1);
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         return null;
     } 
     //check the transaction and password date
-    public boolean compareDates(long accountNumber){
+    public boolean compareDates(long accountNumber) throws SQLException{
         int id = returnId(accountNumber);
         if(returnCreatedAt(lastransactionDateQuery, id).compareTo(returnCreatedAt(lastPasswordDateQuery, id))>0)
         return true;
@@ -471,7 +551,7 @@ public class Database {
     }
 
     //check for valid password
-    public boolean isValidPassword(long accountNumber, String password){
+    public boolean isValidPassword(long accountNumber, String password) throws SQLException{
         int id = returnId(accountNumber);
         Connection con = null;
         PreparedStatement pst = null;
@@ -486,12 +566,15 @@ public class Database {
             return true;
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         
         return false;
     } 
     //update the accounts db
-    public void updateAccountsDb(long balance, int id){
+    public void updateAccountsDb(long balance, int id) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -502,11 +585,14 @@ public class Database {
             pst.executeUpdate();
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
     }
 
     //INSERT INTO TRANSACTION DB
-    public boolean insertIntoTransactions(int customerId,String type,long transactionAmount,long balance ){
+    public boolean insertIntoTransactions(int customerId,String type,long transactionAmount,long balance ) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
@@ -521,6 +607,9 @@ public class Database {
             return true;
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
         }
         return false;
     }

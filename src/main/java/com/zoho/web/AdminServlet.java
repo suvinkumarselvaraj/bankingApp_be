@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.SQLException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,7 +25,12 @@ public class AdminServlet extends HttpServlet {
         switch (path) {
     
         case "/allUsers":
-    allUsers(req,res);
+                try {
+                    allUsers(req,res);
+                } catch (SQLException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
     break;
         }
     }
@@ -32,7 +38,12 @@ public class AdminServlet extends HttpServlet {
         String path = req.getServletPath();
         switch (path) {
             case "/admin/login":
-                adminValidate(req,res);
+                try {
+                    adminValidate(req,res);
+                } catch (SQLException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
                 break;
             
               
@@ -41,12 +52,12 @@ public class AdminServlet extends HttpServlet {
         }
 
     }
-    public void allUsers(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    public void allUsers(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         JSONArray array = new JSONArray();
         array = new Database().sendAllUsers();
         res.getWriter().write(array.toString());
     }
-    public void adminValidate(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    public void adminValidate(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
             Collectors.joining("\n"));
             JSONObject jObj = new JSONObject(jsonBody);

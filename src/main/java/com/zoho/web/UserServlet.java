@@ -1,5 +1,6 @@
 package com.zoho.web;
 
+
 import com.zoho.database.Database;
 import com.zoho.userClass.Users;
 
@@ -11,10 +12,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.SQLException;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.stream.Collectors;
+
+
 
 
 
@@ -40,11 +45,13 @@ public class UserServlet extends HttpServlet{
                 case "/transactionDetails":
                     transactionDetails(req,res);
                     break;
+
             }
         }catch(Exception e){
             e.printStackTrace();
         }
     }
+   
     public void doPost(HttpServletRequest req, HttpServletResponse res){
 
         res.setHeader("Access-Control-Allow-Origin", "*");
@@ -75,6 +82,10 @@ public class UserServlet extends HttpServlet{
                     case "/login":
                         login(req,res);
                         break;
+
+                    case "/maintenancefee":
+                        maintenance(req ,res);
+                        break;
                 }
             }
             catch(Exception e){
@@ -86,7 +97,7 @@ public class UserServlet extends HttpServlet{
     //2. open account
     //3. check password
     //login
-
+   
     public String encryptPassword(String password){
         String encryptedString = new String();
         for(int i=0;i<password.length();i++){ 
@@ -104,7 +115,47 @@ public class UserServlet extends HttpServlet{
 		} 
         return encryptedString;
     }
-    public void login(HttpServletRequest req, HttpServletResponse res) throws IOException{
+
+    //add maintenance fee of rs. 100
+    public void maintenance(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
+        //make sure that there is no maintenance fee applied recently
+        System.out.println("inside transfer area");
+        String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
+                Collectors.joining("\n"));
+        JSONObject jObj = new JSONObject(jsonBody);
+        System.out.println(jObj);
+
+        //sender section
+    
+        int customerId = jObj.getInt("customerId");
+        long balance =jObj.getLong("balance");
+        long transactionAmount = jObj.getLong("amount");
+        String type = jObj.getString("transactionType");
+
+        //check the last record
+        System.out.println("is the last maintenance is 100");
+        System.out.print(new Database().checkLastMaintenanceAmount(customerId));
+        if(!new Database().checkLastMaintenanceAmount(customerId))
+        {
+        balance = balance - transactionAmount;
+        new Database().insertIntoTransactions(customerId, type,transactionAmount,balance);
+        //insert into accounts
+        new Database().updateAccountsDb(balance, customerId); 
+        //delete the history
+      
+        }
+        jObj.put("balance",balance);
+      
+    }
+
+    public void deleteHistory(int customerId) throws SQLException{
+       
+       //delete the last record
+        new Database().deleteHistory(customerId);
+        
+    }
+
+    public void login(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
             Collectors.joining("\n"));
             JSONObject jObj = new JSONObject(jsonBody);
@@ -113,7 +164,6 @@ public class UserServlet extends HttpServlet{
             String password = jObj.getString("password");
             password = encryptPassword(password);
             Users loggedUser = new Database().loginValidate(accountNumber, password);
-
 
             if(loggedUser!=null){
                 jObj.put("status", "success");
@@ -129,7 +179,7 @@ public class UserServlet extends HttpServlet{
         }
 
     //change password
-    public void changePassword(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    public void changePassword(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
             Collectors.joining("\n"));
             JSONObject jObj = new JSONObject(jsonBody);
@@ -166,13 +216,13 @@ public class UserServlet extends HttpServlet{
                 // alert("succesfully changed");
             }
     }
-    public void transactionDetails(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    public void transactionDetails(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         Integer id = Integer.parseInt(req.getParameter("id"));
         //collect the information in the array
         JSONArray jArray = new Database().returnUserThroughId(id);
         res.getWriter().write(jArray.toString());
     }
-    public void availableCustomers(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    public void availableCustomers(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         JSONArray obj = new Database().returnAvailableCustomers();
         System.out.println("inside customer row section");
         res.getWriter().write(obj.toString());
@@ -186,7 +236,8 @@ public class UserServlet extends HttpServlet{
     
         return balance - transactionAmount;
     }
-    public void transfer(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    
+    public void transfer(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         System.out.println("inside transfer area");
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
                 Collectors.joining("\n"));
@@ -204,13 +255,15 @@ public class UserServlet extends HttpServlet{
         new Database().insertIntoTransactions(customerId, type,transactionAmount,newBalance);
 
         //maintenance fee section
+
         
         String type2 = null;
         if(transactionAmount>5000)
         {
-            newBalance = newBalance - 10;
+        newBalance = newBalance - 10;
         type2 = jObj.getString("transactionType2");
         new Database().insertIntoTransactions(customerId, type2, 10, newBalance);
+        new Database().updateAccountsDb(newBalance, customerId);
         }
 
         //receiver section
@@ -220,12 +273,13 @@ public class UserServlet extends HttpServlet{
         int receiverCustomerId = new Database().returnId(receiverAccountNumber);
         if(new Database().insertIntoTransactions(receiverCustomerId, transactionType, transactionAmount, receiverBalance+transactionAmount)){
             jObj.put("status","success");
-            jObj.put("balance",(balance-transactionAmount)+"");
+            jObj.put("balance",newBalance+"");
         }
+
         res.getWriter().write(jObj.toString());
     }
     //decide the type of transaction and set the balance accordingly
-    public void transactions(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    public void transactions(HttpServletRequest req, HttpServletResponse res) throws IOException, JSONException, SQLException{
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Headers", "*");
         System.out.println("inside transation section");
@@ -248,7 +302,7 @@ public class UserServlet extends HttpServlet{
         res.getWriter().write(jObj.toString());
     }
     //check passwords 
-    public void checkPassword(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    public void checkPassword(HttpServletRequest req, HttpServletResponse res) throws IOException, JSONException, SQLException{
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Headers", "*");
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
@@ -270,7 +324,7 @@ public class UserServlet extends HttpServlet{
     }
 
     //checkTransactions to force password change
-    public void checkTransactions(HttpServletRequest req, HttpServletResponse res) throws IOException{
+    public void checkTransactions(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         System.out.println("inside transaction count area");
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Headers", "*");
@@ -285,6 +339,14 @@ public class UserServlet extends HttpServlet{
                     jObj.put("status10","false");
                     jObj.put("status","success");
             }
+        }else
+        if(transactionCount == 10){
+            if(!new Database().checkLastMaintenanceAmount(new Database().getUserid(accountNumber)))
+                {
+                    jObj.put("status5","false");
+                    jObj.put("status10","true");
+                    jObj.put("status","success");
+                }
         }
         else{
             System.out.println("inside failure area");
