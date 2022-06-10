@@ -39,7 +39,7 @@ public class Database {
     String deleteLastPassword = "DELETE FROM password_history where password_id = (SELECT password_id FROM password_history WHERE customer_id  = ? ORDER BY created_at LIMIT 1)";
     String userInfoString = "SELECT * FROM accounts WHERE account_number = ?  AND user_password = (SELECT password_id FROM password_history WHERE password = ? AND customer_id = ?)";
     String lastTransactionAmountQuery = "SELECT transaction_amount FROM transactions WHERE customer_id = ? ORDER BY created_at DESC";
-    String deleteFromTransactionHistory = "DELETE FROM transactions WHERE customer_id = ? ORDER BY created_at DESC";
+    String deleteFromTransactionHistory = "DELETE FROM transactions WHERE customer_id = ? ORDER BY created_at DESC 1";
     //admin section
     
     String adminValidatorString = "SELECT admin_name FROM admins WHERE admin_email = ? AND admin_password = ?";

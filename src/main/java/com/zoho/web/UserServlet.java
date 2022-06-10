@@ -142,7 +142,7 @@ public class UserServlet extends HttpServlet{
         //insert into accounts
         new Database().updateAccountsDb(balance, customerId); 
         //delete the history
-      
+        deleteHistory(customerId);
         }
         jObj.put("balance",balance);
       
