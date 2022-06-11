@@ -391,6 +391,9 @@ public class UserServlet extends HttpServlet{
             if(session!=null){
                 System.out.println("session is already present inside");
                 session.invalidate();
+                //once when the server sees that the session in already in use 
+                //invalidate the session and ask the client end to redirect to the front page
+
                 HttpSession newSession = req.getSession();
                 System.out.print(newSession.getId());
                 newSession.setAttribute("user","created");
@@ -401,7 +404,9 @@ public class UserServlet extends HttpServlet{
             }
             else{
                 Cookie cookie = new Cookie("session", "set");
+                Cookie cookie2 = new Cookie("JSESSION",session.getId());
                 res.addCookie(cookie);
+                res.addCookie(cookie2);
             }
         }else{
             jObj.put("isExistingUser","existing");
