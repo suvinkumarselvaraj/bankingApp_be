@@ -4,10 +4,11 @@ package com.zoho.web;
 import com.zoho.database.Database;
 import com.zoho.userClass.Users;
 
-
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -383,6 +384,25 @@ public class UserServlet extends HttpServlet{
             jObj.put("balance",balance.toString());
             jObj.put("phoneNumber",phoneNumber);
             jObj.put("accountNo",status.accountNumber);
+
+            //set the session. if the session is not null, invalidate to set the new session
+            System.out.print("about to call the cookie");
+            HttpSession session = req.getSession();
+            if(session!=null){
+                System.out.println("session is already present inside");
+                session.invalidate();
+                HttpSession newSession = req.getSession();
+                System.out.print(newSession.getId());
+                newSession.setAttribute("user","created");
+                Cookie cookie = new Cookie("session", "set");
+                Cookie cookie2 = new Cookie("JSESSION",newSession.getId());
+                res.addCookie(cookie2);
+                res.addCookie(cookie);
+            }
+            else{
+                Cookie cookie = new Cookie("session", "set");
+                res.addCookie(cookie);
+            }
         }else{
             jObj.put("isExistingUser","existing");
          }
