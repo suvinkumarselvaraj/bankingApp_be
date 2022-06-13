@@ -1,6 +1,7 @@
 package com.zoho.web;
 
-
+import com.mysql.cj.Session;
+import com.mysql.cj.protocol.x.ContinuousOutputStream;
 import com.zoho.database.Database;
 import com.zoho.userClass.Users;
 
@@ -18,11 +19,9 @@ import java.sql.SQLException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+
 import java.util.stream.Collectors;
-
-
-
-
 
 public class UserServlet extends HttpServlet{
     private static final long serialVersionUID = 1L;
@@ -43,8 +42,24 @@ public class UserServlet extends HttpServlet{
                     availableCustomers(req, res);
                     break;
                 
-                case "/transactionDetails":
+                case "/transactiondetails":
                     transactionDetails(req,res);
+                    break;
+
+                case "/accountdetails":
+                    accountdetails(req,res);
+                    break;
+
+                case "/isSessionPresent":
+                    isSessionPresent(req, res);
+                    break;
+
+                case "/isSameSession":
+                    isSameSession(req, res);
+                    break;
+                
+                case "/logout":
+                    logout(req,res);
                     break;
 
             }
@@ -52,7 +67,7 @@ public class UserServlet extends HttpServlet{
             e.printStackTrace();
         }
     }
-   
+    
     public void doPost(HttpServletRequest req, HttpServletResponse res){
 
         res.setHeader("Access-Control-Allow-Origin", "*");
@@ -93,12 +108,77 @@ public class UserServlet extends HttpServlet{
                 e.printStackTrace();
             }
     }
+    public void logout(HttpServletRequest req , HttpServletResponse res){
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+          String sessionId = session.getId();
+          session.invalidate();
+          Cookie[] cookies = req.getCookies();
+          for (Cookie cookie : cookies) {
+                Cookie name = new Cookie(cookie.getName(), cookie.getValue());
+                name.setMaxAge(0);
+                name.setMaxAge(0);
+                name.setDomain("localhost");
+                name.setPath("/");
+
+              res.addCookie(name);
+              break;
+            }
+          }
+    }
+
+   //check if the session is same
+    public void isSameSession(HttpServletRequest req, HttpServletResponse res) throws IOException{
+        JSONObject jObj =  new JSONObject();
+        if(compareSession(req, res)){
+            jObj.put("isValidUser","success");
+        }
+        else 
+        jObj.put("isValidUser","failure");
+       
+        res.getWriter().write(jObj.toString());
+    }
+
     //find out the places to do encryption
     //1. login
     //2. open account
     //3. check password
     //login
+
+    //session to check for a valid user
+
+    public boolean compareSession(HttpServletRequest req , HttpServletResponse res){
+        HttpSession session = req.getSession(false);
+        Cookie[] cookies = req.getCookies();
+        String value = null;
+        for(Cookie cookie: cookies){
+            if(cookie.getName().equals("JSESSIONID")){
+                value = cookie.getValue();
+                break;
+            }
+        }
+        System.out.println("im printing the session id"+session.getId());
+        if(value.equals(session.getId()))
+        {
+            return true;
+        }
+        return false;
+    }
    
+    public void accountdetails(HttpServletRequest req, HttpServletResponse res) {
+        JSONObject json = new JSONObject();
+        if(compareSession(req, res))  {
+            json.put("isValidUser","success");
+        }
+        else 
+        json.put("isValidUser","failure");
+        try{
+            res.getWriter().write(json.toString());
+        }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+    }
     public String encryptPassword(String password){
         String encryptedString = new String();
         for(int i=0;i<password.length();i++){ 
@@ -116,7 +196,20 @@ public class UserServlet extends HttpServlet{
 		} 
         return encryptedString;
     }
-
+    //function to check for the session existence
+    public void  isSessionPresent(HttpServletRequest request, HttpServletResponse response) throws IOException{
+        HttpSession session = request.getSession(false);
+        JSONObject jObj = new JSONObject();
+        System.out.println("checking for the session");
+        if(session!=null){
+            jObj.put("session","present");
+        }
+        else
+        jObj.put("session","absent");
+        System.out.println("hi hello world");
+        
+        response.getWriter().write(jObj.toString());
+    }
     //add maintenance fee of rs. 100
     public void maintenance(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         //make sure that there is no maintenance fee applied recently
@@ -157,10 +250,23 @@ public class UserServlet extends HttpServlet{
     }
 
     public void login(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
+        
+
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
             Collectors.joining("\n"));
             JSONObject jObj = new JSONObject(jsonBody);
             System.out.println(jObj);
+
+            //check if theres a session already present
+        // if(isSessionPresent(req,res)){
+        //     //if the session is already present, then check if the session id is same
+        //     if(compareSession(req, res)){
+        //         jObj.put("isValidUser","success");
+        //     }
+        //     else
+        //     jObj.put("isValidUser","failure");
+        // }
+
             Long accountNumber = jObj.getLong("accountNumber");
             String password = jObj.getString("password");
             password = encryptPassword(password);
@@ -172,6 +278,11 @@ public class UserServlet extends HttpServlet{
                 jObj.put("balance", loggedUser.balance);
                 jObj.put("phoneNo", loggedUser.phoneNumber);
                 jObj.put("customerId", loggedUser.customerId);
+                HttpSession session = req.getSession();
+                
+                // Cookie cookie1 = new Cookie("JSESSION",session.getId());
+
+                // res.addCookie(cookie1);
             }
             else{
                 jObj.put("status","failure");
@@ -271,6 +382,7 @@ public class UserServlet extends HttpServlet{
         String transactionType = "Transfer from "+accountNumber+"";
         Long receiverAccountNumber = Long.parseLong(jObj.getString("receiverAccountNumber"));
         long receiverBalance = new Database().returnBalance(receiverAccountNumber);
+        System.out.println(receiverBalance);
         int receiverCustomerId = new Database().returnId(receiverAccountNumber);
         if(new Database().insertIntoTransactions(receiverCustomerId, transactionType, transactionAmount, receiverBalance+transactionAmount)){
             jObj.put("status","success");
@@ -393,20 +505,15 @@ public class UserServlet extends HttpServlet{
                 session.invalidate();
                 //once when the server sees that the session in already in use 
                 //invalidate the session and ask the client end to redirect to the front page
-
                 HttpSession newSession = req.getSession();
                 System.out.print(newSession.getId());
                 newSession.setAttribute("user","created");
-                Cookie cookie = new Cookie("session", "set");
-                Cookie cookie2 = new Cookie("JSESSION",newSession.getId());
-                res.addCookie(cookie2);
-                res.addCookie(cookie);
             }
             else{
-                Cookie cookie = new Cookie("session", "set");
-                Cookie cookie2 = new Cookie("JSESSION",session.getId());
-                res.addCookie(cookie);
-                res.addCookie(cookie2);
+                // Cookie cookie = new Cookie("session", "set");
+                // Cookie cookie2 = new Cookie("JSESSION",session.getId());
+                // res.addCookie(cookie);
+                // res.addCookie(cookie2);
             }
         }else{
             jObj.put("isExistingUser","existing");

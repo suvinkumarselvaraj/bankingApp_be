@@ -102,7 +102,7 @@
   </servlet-mapping>
   <servlet>
     <servlet-name>
-      transactionDetails
+      transactiondetails
     </servlet-name>
     <servlet-class>
       com.zoho.web.UserServlet
@@ -110,10 +110,10 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>
-      transactionDetails
+      transactiondetails
     </servlet-name>
     <url-pattern>
-      /transactionDetails
+      /transactiondetails
     </url-pattern>
   </servlet-mapping>
   
@@ -235,4 +235,82 @@
       /deletehistory
     </url-pattern>
   </servlet-mapping>
+
+  <servlet>
+    <servlet-name>
+      account
+    </servlet-name>
+    <servlet-class>
+      com.zoho.web.UserServlet
+    </servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>
+      account
+    </servlet-name>
+    <url-pattern>
+      /account
+    </url-pattern>
+
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>
+      logout
+    </servlet-name>
+    <servlet-class>
+      com.zoho.web.UserServlet
+    </servlet-class>
+  </servlet>
+<servlet-mapping>
+    <servlet-name>
+      logout
+    </servlet-name>
+    <url-pattern>
+      /logout
+    </url-pattern>
+  </servlet-mapping>
+  
+    <servlet>
+      <servlet-name>
+        issessionpresent
+      </servlet-name>
+      <servlet-class>
+        com.zoho.web.UserServlet
+      </servlet-class>
+    </servlet>
+    <servlet-mapping>
+      <servlet-name>
+        issessionpresent
+      </servlet-name>
+      <url-pattern>
+        /isSessionPresent
+      </url-pattern>   
+  </servlet-mapping>
+
+
+  <servlet>
+    <servlet-name>
+      issamesession
+    </servlet-name>
+    <servlet-class>
+      com.zoho.web.UserServlet
+    </servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>
+      issamesession
+    </servlet-name>
+    <url-pattern>
+      /isSameSession
+    </url-pattern>   
+</servlet-mapping>
+
+
+    <session-config>
+      <cookie-config>
+        <path>/</path>
+      </cookie-config>      
+    </session-config>
+
 </web-app>

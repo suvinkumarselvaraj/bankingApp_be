@@ -24,6 +24,9 @@ public class Database {
     String returnUserIdQuery = "SELECT customer_id FROM accounts WHERE account_number = ?";
     String returnCountQuery = "SELECT COUNT(*) FROM accounts";
     String passwordInsertQuery = "INSERT INTO password_history(customer_id,password) VALUES(?,?)";
+
+    //UPDATE accounts INNER JOIN password_history on accounts.customer_id = password_history.customer_id     GROUP BY password_id ORDER BY desc LIMIT 1 
+    //String passwordIdInsertQuery = "UPDATE accounts SET accounts.user_password = password_history.password_id FROM accounts INNER JOIN password_history ON accounts.customer_id = password_history.customer_id  WHERE customer_id = ? GROUP BY customer_id ORDER BY created_at DESC LIMIT 1";
     String passwordIdInsertQuery = "UPDATE accounts SET user_password = (SELECT password_id FROM password_history WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1) WHERE customer_id = ?";
     String checkTransactionCountQuery  = "SELECT COUNT(*) FROM transactions WHERE customer_id = ? AND transaction_type NOT IN ('Maintenance fee')";    
     String lastransactionType = "SELECT transaction_type FROM transactions WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
@@ -245,7 +248,7 @@ public class Database {
             pst.setLong(1, accountNumber);
             ResultSet rst = pst.executeQuery();
             rst.next();
-            return rst.getLong(1);
+            return rst.getLong(2);
         }catch(Exception e){
             e.printStackTrace();
         }finally{
