@@ -110,7 +110,7 @@ public class UserServlet extends HttpServlet{
         JSONObject jObject = new JSONObject();
         HttpSession session = req.getSession(false);
         if (session != null) {
-          String sessionId = session.getId();
+        //   String sessionId = session.getId();
           session.invalidate();
           Cookie[] cookies = req.getCookies();
           
@@ -280,7 +280,7 @@ public class UserServlet extends HttpServlet{
                 jObj.put("balance", loggedUser.balance);
                 jObj.put("phoneNo", loggedUser.phoneNumber);
                 jObj.put("customerId", loggedUser.customerId);
-                HttpSession session = req.getSession();
+                //HttpSession session = req.getSession();
                 
                 // Cookie cookie1 = new Cookie("JSESSION",session.getId());
 
