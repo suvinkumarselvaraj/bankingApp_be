@@ -18,7 +18,7 @@ import org.json.JSONObject;
 public class Database {
    private static final String insertUserQuery = "INSERT INTO accounts(account_number, name, balance,phone_no) VALUES(?,?,?,?)";
    private static final String userQuery = "SELECT * FROM accounts";
-   private static final String particularUserQuery = "SELECT * FROM accounts WHERE account_number = ?";
+   //private static final String particularUserQuery = "SELECT * FROM accounts WHERE account_number = ?";
    private static final String particularUserThroughIdQuery = "SELECT * FROM transactions WHERE customer_id = ?";
    private static final String ifPresentQuery = "SELECT customer_id FROM accounts WHERE phone_no = ?";
    private static final String returnUserIdQuery = "SELECT customer_id FROM accounts WHERE account_number = ?";

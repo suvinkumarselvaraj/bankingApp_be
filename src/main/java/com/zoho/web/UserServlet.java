@@ -78,7 +78,7 @@ public class UserServlet extends HttpServlet{
                         break;
                     
                     case "/changePassword":
-                        changePassword(req,res);
+                        changepassword(req,res);
                         break;
                     
                     case "/transactions":
@@ -271,8 +271,8 @@ public class UserServlet extends HttpServlet{
 
             Long accountNumber = jObj.getLong("accountNumber");
             String password = jObj.getString("password");
-            String ePassword = encryptPassword(password);
-            User loggedUser = new Database().loginValidate(accountNumber, ePassword);
+            password = encryptPassword(password);
+            User loggedUser = new Database().loginValidate(accountNumber, password);
 
             if(loggedUser!=null){
                 jObj.put("status", "success");
@@ -280,7 +280,7 @@ public class UserServlet extends HttpServlet{
                 jObj.put("balance", loggedUser.balance);
                 jObj.put("phoneNo", loggedUser.phoneNumber);
                 jObj.put("customerId", loggedUser.customerId);
-                //HttpSession session = req.getSession();
+                HttpSession session = req.getSession();
                 
                 // Cookie cookie1 = new Cookie("JSESSION",session.getId());
 
@@ -293,7 +293,8 @@ public class UserServlet extends HttpServlet{
         }
 
     //change password
-    public void changePassword(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
+    public void changepassword(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
+        System.out.println("im inside password blockkkk");
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
             Collectors.joining("\n"));
             JSONObject jObj = new JSONObject(jsonBody);
@@ -323,7 +324,7 @@ public class UserServlet extends HttpServlet{
                 }
                 jObj.put("status","success");
                 //update in the password_history db
-                new Database().insertPasswordIntoPasswordHistory(id,newPassword);
+                new Database().insertPasswordIntoPasswordHistory(id,encryptedNewPassword);
                 //update accounts db password
                 new Database().updateAccountPassword(id);
                 res.getWriter().write(jObj.toString());
@@ -426,10 +427,10 @@ public class UserServlet extends HttpServlet{
         
         Long accountNumber = jObj.getLong("accountNumber");
         String password = jObj.getString("oPass");
-        String ePassword = encryptPassword(password);
+        password = encryptPassword(password);
         System.out.print("inside password check");
         //call a function with the old password that goes to the db to retrieve the latest password to validate
-        if(new Database().isValidPassword(accountNumber,ePassword)){
+        if(new Database().isValidPassword(accountNumber,password)){
             jObj.put("oldPasswordCheck","success");            
         }
         else
@@ -482,10 +483,10 @@ public class UserServlet extends HttpServlet{
         System.out.println(jObj);
         String username = jObj.getString("username");
         String password = jObj.getString("password");
-        String ePassword = encryptPassword(password);
+        password = encryptPassword(password);
         Long phoneNumber =Long.parseLong(jObj.getString("phone"));
         Long balance = 0l;
-        User newUser = new User(username,ePassword,phoneNumber,balance);
+        User newUser = new User(username,password,phoneNumber,balance);
         Database db = new Database();
         System.out.println("about to call the database class");
         User status = db.insertUser(newUser);
