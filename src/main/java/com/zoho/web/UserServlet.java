@@ -1,9 +1,7 @@
 package com.zoho.web;
 
-import com.mysql.cj.Session;
-import com.mysql.cj.protocol.x.ContinuousOutputStream;
 import com.zoho.database.Database;
-import com.zoho.userClass.Users;
+import com.zoho.userClass.User;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
@@ -95,7 +93,7 @@ public class UserServlet extends HttpServlet{
                         transfer(req, res);
                         break;
 
-                    case "/login":
+                    case "/loginuser":
                         login(req,res);
                         break;
 
@@ -108,12 +106,14 @@ public class UserServlet extends HttpServlet{
                 e.printStackTrace();
             }
     }
-    public void logout(HttpServletRequest req , HttpServletResponse res){
+    public void logout(HttpServletRequest req , HttpServletResponse res) throws IOException{
+        JSONObject jObject = new JSONObject();
         HttpSession session = req.getSession(false);
         if (session != null) {
           String sessionId = session.getId();
           session.invalidate();
           Cookie[] cookies = req.getCookies();
+          
           for (Cookie cookie : cookies) {
                 Cookie name = new Cookie(cookie.getName(), cookie.getValue());
                 name.setMaxAge(0);
@@ -125,6 +125,8 @@ public class UserServlet extends HttpServlet{
               break;
             }
           }
+          jObject.put("log","off");
+          res.getWriter().write(jObject.toString());
     }
 
    //check if the session is same
@@ -258,7 +260,7 @@ public class UserServlet extends HttpServlet{
             System.out.println(jObj);
 
             //check if theres a session already present
-        // if(isSessionPresent(req,res)){
+        // if(isSessionPresent(req,res))
         //     //if the session is already present, then check if the session id is same
         //     if(compareSession(req, res)){
         //         jObj.put("isValidUser","success");
@@ -269,8 +271,8 @@ public class UserServlet extends HttpServlet{
 
             Long accountNumber = jObj.getLong("accountNumber");
             String password = jObj.getString("password");
-            password = encryptPassword(password);
-            Users loggedUser = new Database().loginValidate(accountNumber, password);
+            String ePassword = encryptPassword(password);
+            User loggedUser = new Database().loginValidate(accountNumber, ePassword);
 
             if(loggedUser!=null){
                 jObj.put("status", "success");
@@ -300,12 +302,12 @@ public class UserServlet extends HttpServlet{
             long accountNumber =jObj.getLong("accountNumber");
             
             String newPassword =jObj.getString("nPass");
-            newPassword = encryptPassword(newPassword);
+            String encryptedNewPassword = encryptPassword(newPassword);
             int id = new Database().returnId(accountNumber);
             //check if the new password entered matches the old passwords
             
             System.out.println("line 94 checking for password match");
-            if(new Database().checkIfPasswordMatches(accountNumber, newPassword)){
+            if(new Database().checkIfPasswordMatches(accountNumber, encryptedNewPassword)){
                
                 jObj.put("insertion", "failure");
                 res.getWriter().write(jObj.toString());
@@ -424,10 +426,10 @@ public class UserServlet extends HttpServlet{
         
         Long accountNumber = jObj.getLong("accountNumber");
         String password = jObj.getString("oPass");
-        password = encryptPassword(password);
+        String ePassword = encryptPassword(password);
         System.out.print("inside password check");
         //call a function with the old password that goes to the db to retrieve the latest password to validate
-        if(new Database().isValidPassword(accountNumber,password)){
+        if(new Database().isValidPassword(accountNumber,ePassword)){
             jObj.put("oldPasswordCheck","success");            
         }
         else
@@ -480,13 +482,13 @@ public class UserServlet extends HttpServlet{
         System.out.println(jObj);
         String username = jObj.getString("username");
         String password = jObj.getString("password");
-        password = encryptPassword(password);
+        String ePassword = encryptPassword(password);
         Long phoneNumber =Long.parseLong(jObj.getString("phone"));
         Long balance = 0l;
-        Users newUser = new Users(username,password,phoneNumber,balance);
+        User newUser = new User(username,ePassword,phoneNumber,balance);
         Database db = new Database();
         System.out.println("about to call the database class");
-        Users status = db.insertUser(newUser);
+        User status = db.insertUser(newUser);
         System.out.println("returned after the calling");
         if(status != null){
             jObj.put("isExistingUser","non-existing");

@@ -164,7 +164,7 @@
       login
     </servlet-name>
     <url-pattern>
-      /login
+      /loginuser
     </url-pattern>
   </servlet-mapping>
 

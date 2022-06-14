@@ -2,7 +2,7 @@ package com.zoho.userClass;
 
 import java.sql.Timestamp;
 
-public class Users {
+public class User {
     public String username;
     public long accountNumber;
     public int customerId;;
@@ -11,10 +11,10 @@ public class Users {
     public Timestamp createdAt;
     public long phoneNumber;
 
-    public Users(){
+    public User(){
 
     }
-    public Users( int customerId, long accountNo, String username,long phoneNumber, long balance,Timestamp createdAt ){
+    public User( int customerId, long accountNo, String username,long phoneNumber, long balance,Timestamp createdAt ){
         this.username = username;
         this.customerId = customerId;
         this.accountNumber = accountNo;
@@ -23,7 +23,7 @@ public class Users {
         this.balance = balance;
         
     }
-    public Users(  String username, String password,long phoneNumber, long balance){
+    public User(  String username, String password,long phoneNumber, long balance){
         this.username = username;
         this.password = password;
         this.balance = balance;

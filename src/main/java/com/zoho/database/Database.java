@@ -1,6 +1,6 @@
 package com.zoho.database;
 
-import com.zoho.userClass.Users;
+import com.zoho.userClass.User;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -16,33 +16,33 @@ import org.json.JSONObject;
 
 
 public class Database {
-    String insertUserQuery = "INSERT INTO accounts(account_number, name, balance,phone_no) VALUES(?,?,?,?)";
-    String userQuery = "SELECT * FROM accounts";
-    String particularUserQuery = "SELECT * FROM accounts WHERE account_number = ?";
-    String particularUserThroughIdQuery = "SELECT * FROM transactions WHERE customer_id = ?";
-    String ifPresentQuery = "SELECT customer_id FROM accounts WHERE phone_no = ?";
-    String returnUserIdQuery = "SELECT customer_id FROM accounts WHERE account_number = ?";
-    String returnCountQuery = "SELECT COUNT(*) FROM accounts";
-    String passwordInsertQuery = "INSERT INTO password_history(customer_id,password) VALUES(?,?)";
+   private static final String insertUserQuery = "INSERT INTO accounts(account_number, name, balance,phone_no) VALUES(?,?,?,?)";
+   private static final String userQuery = "SELECT * FROM accounts";
+   private static final String particularUserQuery = "SELECT * FROM accounts WHERE account_number = ?";
+   private static final String particularUserThroughIdQuery = "SELECT * FROM transactions WHERE customer_id = ?";
+   private static final String ifPresentQuery = "SELECT customer_id FROM accounts WHERE phone_no = ?";
+   private static final String returnUserIdQuery = "SELECT customer_id FROM accounts WHERE account_number = ?";
+   private static final String returnCountQuery = "SELECT COUNT(*) FROM accounts";
+   private static final String passwordInsertQuery = "INSERT INTO password_history(customer_id,password) VALUES(?,?)";
 
     //UPDATE accounts INNER JOIN password_history on accounts.customer_id = password_history.customer_id     GROUP BY password_id ORDER BY desc LIMIT 1 
     //String passwordIdInsertQuery = "UPDATE accounts SET accounts.user_password = password_history.password_id FROM accounts INNER JOIN password_history ON accounts.customer_id = password_history.customer_id  WHERE customer_id = ? GROUP BY customer_id ORDER BY created_at DESC LIMIT 1";
-    String passwordIdInsertQuery = "UPDATE accounts SET user_password = (SELECT password_id FROM password_history WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1) WHERE customer_id = ?";
-    String checkTransactionCountQuery  = "SELECT COUNT(*) FROM transactions WHERE customer_id = ? AND transaction_type NOT IN ('Maintenance fee')";    
-    String lastransactionType = "SELECT transaction_type FROM transactions WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
-    String lastransactionDateQuery = "SELECT created_at FROM transactions WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
-    String lastPasswordDateQuery = "SELECT created_at FROM password_history WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
-    String isValidPasswordQuery = "SELECT customer_id FROM accounts WHERE customer_id = ? AND user_password = (SELECT password_id FROM password_history WHERE customer_id = ? AND password = ?)";     
-    String insertIntoTransactions = "INSERT INTO transactions(customer_id,transaction_type,transaction_amount,balance) VALUES(?,?,?,?)";
-    String updateAccountsQuery = "UPDATE accounts SET balance = ? WHERE customer_id = ?";
-    String returnBalance = "SELECT customer_id, balance FROM accounts WHERE account_number = ?";
-    String returnAccountNumber = "SELECT account_number FROM accounts";
-    String checkPasswordQuery = "SELECT password from password_history WHERE customer_id = ? ";
-    String passwordCountQuery = "SELECT COUNT(*) FROM password_history WHERE customer_id = ?";
-    String deleteLastPassword = "DELETE FROM password_history where password_id = (SELECT password_id FROM password_history WHERE customer_id  = ? ORDER BY created_at LIMIT 1)";
-    String userInfoString = "SELECT * FROM accounts WHERE account_number = ?  AND user_password = (SELECT password_id FROM password_history WHERE password = ? AND customer_id = ?)";
-    String lastTransactionAmountQuery = "SELECT transaction_amount FROM transactions WHERE customer_id = ? ORDER BY created_at DESC";
-    String deleteFromTransactionHistory = "DELETE FROM transactions WHERE customer_id = ? ORDER BY created_at DESC 1";
+    private static final String passwordIdInsertQuery = "UPDATE accounts SET user_password = (SELECT password_id FROM password_history WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1) WHERE customer_id = ?";
+    private static final String checkTransactionCountQuery  = "SELECT COUNT(*) FROM transactions WHERE customer_id = ? AND transaction_type NOT LIKE '%fee' AND transaction_type NOT LIKE '%from%'";    
+    private static final String lastransactionType = "SELECT transaction_type FROM transactions WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
+    private static final String lastransactionDateQuery = "SELECT created_at FROM transactions WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
+    private static final String lastPasswordDateQuery = "SELECT created_at FROM password_history WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1";
+    private static final String isValidPasswordQuery = "SELECT customer_id FROM accounts WHERE customer_id = ? AND user_password = (SELECT password_id FROM password_history WHERE customer_id = ? AND password = ?)";     
+    private static final String insertIntoTransactions = "INSERT INTO transactions(customer_id,transaction_type,transaction_amount,balance) VALUES(?,?,?,?)";
+    private static final String updateAccountsQuery = "UPDATE accounts SET balance = ? WHERE customer_id = ?";
+    private static final String returnBalance = "SELECT customer_id, balance FROM accounts WHERE account_number = ?";
+    private static final String returnAccountNumber = "SELECT account_number FROM accounts";
+    private static final String checkPasswordQuery = "SELECT password from password_history WHERE customer_id = ? ";
+    private static final String passwordCountQuery = "SELECT COUNT(*) FROM password_history WHERE customer_id = ?";
+    private static final String deleteLastPassword = "DELETE FROM password_history where password_id = (SELECT password_id FROM password_history WHERE customer_id  = ? ORDER BY created_at LIMIT 1)";
+    private static final String userInfoString = "SELECT * FROM accounts WHERE account_number = ?  AND user_password = (SELECT password_id FROM password_history WHERE password = ? AND customer_id = ?)";
+    private static final String lastTransactionAmountQuery = "SELECT transaction_amount FROM transactions WHERE customer_id = ? ORDER BY created_at DESC";
+    private static final String deleteFromTransactionHistory = "DELETE FROM transactions WHERE customer_id = ? ORDER BY created_at DESC 1";
     //admin section
     
     String adminValidatorString = "SELECT admin_name FROM admins WHERE admin_email = ? AND admin_password = ?";
@@ -142,7 +142,7 @@ public class Database {
     }
 
     //login handler
-    public Users loginValidate(long accountNumber, String password ) throws SQLException{
+    public User loginValidate(long accountNumber, String password ) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
 
@@ -155,7 +155,7 @@ public class Database {
             pst.setLong(3, customerId);
             ResultSet rst = pst.executeQuery();
             if(rst.next()){
-                return new Users(customerId,accountNumber,rst.getString("name"),rst.getLong("phone_no"),rst.getLong("balance"),rst.getTimestamp("created_at"));
+                return new User(customerId,accountNumber,rst.getString("name"),rst.getLong("phone_no"),rst.getLong("balance"),rst.getTimestamp("created_at"));
             }
         }catch(Exception e ){
             e.printStackTrace();
@@ -379,7 +379,7 @@ public class Database {
         }
     }
 //inserting the user 
-    public Users insertUser(Users user)throws Exception{
+    public User insertUser(User user)throws Exception{
         
         System.out.println("im called");
         System.out.println(checkIfUserPresent(user.username, user.phoneNumber));
@@ -407,7 +407,7 @@ public class Database {
             //update accounts
             updateAccountPassword(customerId);
 
-            return new Users(customerId, accountNumber, user.username,user.balance,user.phoneNumber,null);
+            return new User(customerId, accountNumber, user.username,user.balance,user.phoneNumber,null);
             
             //INSERT PASSWORD_ID TO ACCOUNTS TABLE
         }catch(Exception e){
@@ -449,16 +449,16 @@ public class Database {
         return false;
     }
 
-    public List<Users> returnAllUsers() throws SQLException{
+    public List<User> returnAllUsers() throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
         try{
             con = returnConnection();
             pst = con.prepareStatement(userQuery);
             ResultSet rst = pst.executeQuery();
-            List<Users> userList = new ArrayList<Users>();
+            List<User> userList = new ArrayList<User>();
             while(rst.next()){
-            Users user = new Users(rst.getInt(1),rst.getLong(2),rst.getString(3),rst.getLong(4),rst.getLong(5),rst.getTimestamp(5));
+            User user = new User(rst.getInt(1),rst.getLong(2),rst.getString(3),rst.getLong(4),rst.getLong(5),rst.getTimestamp(5));
                 userList.add(user);
             }
             return userList;
