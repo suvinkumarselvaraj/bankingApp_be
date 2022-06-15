@@ -276,8 +276,8 @@ public class UserServlet extends HttpServlet{
 
             Long accountNumber = jObj.getLong("accountNumber");
             String password = jObj.getString("password");
-            password = encryptPassword(password);
-            User loggedUser = new Database().loginValidate(accountNumber, password);
+            String ePassword = encryptPassword(password);
+            User loggedUser = new Database().loginValidate(accountNumber, ePassword);
 
             if(loggedUser!=null){
                 jObj.put("status", "success");
@@ -432,10 +432,10 @@ public class UserServlet extends HttpServlet{
         
         Long accountNumber = jObj.getLong("accountNumber");
         String password = jObj.getString("oPass");
-        password = encryptPassword(password);
+        String ePassword = encryptPassword(password);
         System.out.print("inside password check");
         //call a function with the old password that goes to the db to retrieve the latest password to validate
-        if(new Database().isValidPassword(accountNumber,password)){
+        if(new Database().isValidPassword(accountNumber,ePassword)){
             jObj.put("oldPasswordCheck","success");            
         }
         else
@@ -488,10 +488,10 @@ public class UserServlet extends HttpServlet{
         System.out.println(jObj);
         String username = jObj.getString("username");
         String password = jObj.getString("password");
-        password = encryptPassword(password);
+       String ePassword = encryptPassword(password);
         Long phoneNumber =Long.parseLong(jObj.getString("phone"));
         Long balance = 0l;
-        User newUser = new User(username,password,phoneNumber,balance);
+        User newUser = new User(username,ePassword,phoneNumber,balance);
         Database db = new Database();
         System.out.println("about to call the database class");
         User status = db.insertUser(newUser);
