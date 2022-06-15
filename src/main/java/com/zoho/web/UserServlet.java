@@ -239,8 +239,13 @@ public class UserServlet extends HttpServlet{
         new Database().updateAccountsDb(balance, customerId); 
         //delete the history
         deleteHistory(customerId);
-        }
         jObj.put("balance",balance);
+        jObj.put("status","success");
+        }else{
+            jObj.put("status","failure");
+        }
+        
+        res.getWriter().write(jObj.toString());
       
     }
 

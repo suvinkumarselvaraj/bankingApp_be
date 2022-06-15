@@ -78,7 +78,9 @@ public class Database {
             ResultSet  rst = pst.executeQuery();
             if(rst.next())
             {   if(rst.getLong(1)==100)
-                return true;
+                {   rst.close();
+                    return true;
+                }
             }
         }catch(Exception e ){
             e.printStackTrace();
@@ -108,6 +110,7 @@ public class Database {
                     jObject.put("created_at",rst.getDate(7));
                     jArray.put(jObject);
                 }
+                rst.close();
             }catch(Exception e){
                 e.printStackTrace();
             }finally{
@@ -129,9 +132,13 @@ public class Database {
             pst.setString(2, password);
             System.out.println("post admin validation");
             ResultSet rst = pst.executeQuery();
-           
+            String adminName = null;
             if(rst.next())
-            return rst.getString("admin_name");
+            {
+                adminName = rst.getString("admin_name");
+                rst.close();
+                return adminName;
+            }
         }catch(Exception e){
             e.printStackTrace();
         }finally{
@@ -155,7 +162,11 @@ public class Database {
             pst.setLong(3, customerId);
             ResultSet rst = pst.executeQuery();
             if(rst.next()){
-                return new User(customerId,accountNumber,rst.getString("name"),rst.getLong("phone_no"),rst.getLong("balance"),rst.getTimestamp("created_at"));
+                String userName = rst.getString("name");
+                Long phoneNum = rst.getLong("phone_no");
+                Long balance = rst.getLong("balance");
+                Timestamp tst = rst.getTimestamp("created_at");
+                return new User(customerId,accountNumber,userName,phoneNum,balance,tst);
             }
         }catch(Exception e ){
             e.printStackTrace();
@@ -199,6 +210,7 @@ public class Database {
         System.out.println("im hereeeeeeeeee");
              while(rst.next()){
             String password = rst.getString(1);
+            rst.close();
             if(password.equals(newPassword))
             return true;
         }   
@@ -229,6 +241,7 @@ public class Database {
             jObject.put("date",rst.getDate(5));
             jArray.put(jObject);
             }
+            rst.close();
     }
     catch(Exception e){
         e.printStackTrace();
@@ -248,7 +261,9 @@ public class Database {
             pst.setLong(1, accountNumber);
             ResultSet rst = pst.executeQuery();
             rst.next();
-            return rst.getLong(2);
+            long balance = rst.getLong(2);
+            rst.close();
+            return balance;
         }catch(Exception e){
             e.printStackTrace();
         }finally{
@@ -266,6 +281,7 @@ public class Database {
             ResultSet rst = pst.executeQuery();
             rst.next();
             int count = rst.getInt(1);
+            rst.close();
             if (count == 0){
                 return 11011;
             }
@@ -294,6 +310,7 @@ public class Database {
                 jObject.put("accountNumber",acc);
                 array.put(jObject);
             }
+            rst.close();
         }catch(Exception e){
             e.printStackTrace();
         }finally{
@@ -316,6 +333,7 @@ public class Database {
             ResultSet rst = pst.executeQuery();
             rst.next();
             int id = rst.getInt(1);
+            rst.close();
             return id;
         }catch(Exception e){
             e.printStackTrace();
@@ -335,7 +353,9 @@ public class Database {
             pst.setInt(1, customer_id);
             ResultSet rst = pst.executeQuery();
             rst.next();
-            if(rst.getInt(1)==3)
+            int count = rst.getInt(1);
+            rst.close();
+            if(count==3)
             return true;
         }catch(Exception e){
             e.printStackTrace();
@@ -437,8 +457,10 @@ public class Database {
 
             System.out.println(rst.next());
             if(rst.next())  
-            return true;
-
+            {   rst.close();
+                return true;
+            }
+            rst.close();
             return false;
         }catch(Exception e){
             e.printStackTrace();
@@ -461,6 +483,7 @@ public class Database {
             User user = new User(rst.getInt(1),rst.getLong(2),rst.getString(3),rst.getLong(4),rst.getLong(5),rst.getTimestamp(5));
                 userList.add(user);
             }
+            rst.close();
             return userList;
         }catch(Exception e){
             e.printStackTrace();
@@ -482,7 +505,10 @@ public class Database {
             ResultSet rst = pst.executeQuery();
             rst.next();
             if(rst.getString(1).equals("Maintenance fee ="))
-            return true;
+            {   rst.close();
+                return true;
+            }
+            rst.close();
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -509,6 +535,7 @@ public class Database {
                 ResultSet rst = pst.executeQuery();
                 rst.next();
                 int total = rst.getInt(1);
+                rst.close();
                 // if( total%10 ==0 && total%5 == 0)
                 // return 105;
                 if(total%10==0)
@@ -535,7 +562,9 @@ public class Database {
             pst.setInt(1, id);
             ResultSet rst = pst.executeQuery();
             rst.next();
-            return rst.getTimestamp(1);
+            Timestamp tst = rst.getTimestamp(1);
+            rst.close();
+            return tst;
         }catch(Exception e){
             e.printStackTrace();
         }finally{
@@ -566,11 +595,15 @@ public class Database {
             pst.setString(3, password);
             ResultSet rst = pst.executeQuery();
             if(rst.next())
-            return true;
+            {   rst.close();
+                return true;
+            }
+            rst.close();
         }catch(Exception e){
             e.printStackTrace();
         }finally{
             pst.close();
+           
             con.close();
         }
         
