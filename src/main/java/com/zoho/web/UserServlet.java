@@ -18,14 +18,26 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
 public class UserServlet extends HttpServlet{
-    // static{
-    //     Logger logger = Logger.getLogger("UserServlet.class");
+   static Logger logger = Logger.getLogger("UserServlet.class");
+    static{
+      
+        try
+        {
+            FileHandler fh = new FileHandler("C://projects//website//src//main//java//com//zoho//web//UserLog.txt",true);
+            logger.addHandler(fh);
+            SimpleFormatter sfm = new SimpleFormatter();
+            fh.setFormatter(sfm);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
-    // }
     private static final long serialVersionUID = 1L;
     public void doGet(HttpServletRequest req, HttpServletResponse res){
         String action = req.getServletPath();
@@ -34,7 +46,6 @@ public class UserServlet extends HttpServlet{
                 case "/new":                    //used for testing purpose 
                     showHomePage(req,res);
                     break;
-
                     
                 case "/checktransactions":
                     checkTransactions(req,res);
@@ -110,6 +121,7 @@ public class UserServlet extends HttpServlet{
                 e.printStackTrace();
             }
     }
+
     public void logout(HttpServletRequest req , HttpServletResponse res) throws IOException{
         JSONObject jObject = new JSONObject();
         HttpSession session = req.getSession(false);
@@ -144,14 +156,7 @@ public class UserServlet extends HttpServlet{
         res.getWriter().write(jObj.toString());
     }
 
-    //find out the places to do encryption
-    //1. login
-    //2. open account
-    //3. check password
-    //login
-
     //session to check for a valid user
-
     public boolean compareSession(HttpServletRequest req , HttpServletResponse res){
         HttpSession session = req.getSession(false);
         Cookie[] cookies = req.getCookies();
@@ -184,6 +189,7 @@ public class UserServlet extends HttpServlet{
                 e.printStackTrace();
             }
     }
+
     public String encryptPassword(String password){
         String encryptedString = new String();
         for(int i=0;i<password.length();i++){ 
@@ -201,6 +207,7 @@ public class UserServlet extends HttpServlet{
 		} 
         return encryptedString;
     }
+
     //function to check for the session existence
     public void  isSessionPresent(HttpServletRequest request, HttpServletResponse response) throws IOException{
         HttpSession session = request.getSession(false);
@@ -215,6 +222,7 @@ public class UserServlet extends HttpServlet{
         
         response.getWriter().write(jObj.toString());
     }
+
     //add maintenance fee of rs. 100
     public void maintenance(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         //make sure that there is no maintenance fee applied recently
@@ -259,7 +267,7 @@ public class UserServlet extends HttpServlet{
     }
 
     public void login(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
-        
+        UserServlet.logger.info("logged in");
 
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
             Collectors.joining("\n"));
@@ -328,17 +336,20 @@ public class UserServlet extends HttpServlet{
                 // alert("succesfully changed");
             }
     }
+
     public void transactionDetails(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         Integer id = Integer.parseInt(req.getParameter("id"));
         //collect the information in the array
         JSONArray jArray = new Database().returnUserThroughId(id);
         res.getWriter().write(jArray.toString());
     }
+
     public void availableCustomers(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         JSONArray obj = new Database().returnAvailableCustomers();
         System.out.println("inside customer row section");
         res.getWriter().write(obj.toString());
     }
+
     //send the balance according to the type
     public long returnBalanceAccordingToType(String type, long balance, long transactionAmount){
         if(type.equals("Opening")||type.equals("deposit")||type.contains("from")){
@@ -391,6 +402,7 @@ public class UserServlet extends HttpServlet{
 
         res.getWriter().write(jObj.toString());
     }
+
     //decide the type of transaction and set the balance accordingly
     public void transactions(HttpServletRequest req, HttpServletResponse res) throws IOException, JSONException, SQLException{
       
@@ -413,6 +425,7 @@ public class UserServlet extends HttpServlet{
         }
         res.getWriter().write(jObj.toString());
     }
+
     //check passwords 
     public void checkPassword(HttpServletRequest req, HttpServletResponse res) throws IOException, JSONException, SQLException{
        
@@ -476,7 +489,7 @@ public class UserServlet extends HttpServlet{
         System.out.println(jObj);
         String username = jObj.getString("username");
         String password = jObj.getString("password");
-       String ePassword = encryptPassword(password);
+        String ePassword = encryptPassword(password);
         Long phoneNumber =Long.parseLong(jObj.getString("phone"));
         Long balance = 0l;
         User newUser = new User(username,ePassword,phoneNumber,balance);
@@ -515,6 +528,5 @@ public class UserServlet extends HttpServlet{
             jObj.put("isExistingUser","existing");
          }
          res.getWriter().write(jObj.toString()); 
-    }   
-   
+    }     
 }

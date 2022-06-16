@@ -11,13 +11,8 @@ import java.sql.SQLException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import com.zoho.database.Database;
-
 import java.util.stream.Collectors;
-
-
-
 
 public class AdminServlet extends HttpServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException{
@@ -34,6 +29,7 @@ public class AdminServlet extends HttpServlet {
     break;
         }
     }
+
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException{
         String path = req.getServletPath();
         switch (path) {
@@ -52,11 +48,13 @@ public class AdminServlet extends HttpServlet {
         }
 
     }
+
     public void allUsers(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         JSONArray array = new JSONArray();
         array = new Database().sendAllUsers();
         res.getWriter().write(array.toString());
     }
+
     public void adminValidate(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
             Collectors.joining("\n"));

@@ -1,6 +1,10 @@
 package com.zoho.database;
 
 import com.zoho.userClass.User;
+
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -16,14 +20,14 @@ import org.json.JSONObject;
 
 
 public class Database {
-   private static final String insertUserQuery = "INSERT INTO accounts(account_number, name, balance,phone_no) VALUES(?,?,?,?)";
-   private static final String userQuery = "SELECT * FROM accounts";
-   //private static final String particularUserQuery = "SELECT * FROM accounts WHERE account_number = ?";
-   private static final String particularUserThroughIdQuery = "SELECT * FROM transactions WHERE customer_id = ?";
-   private static final String ifPresentQuery = "SELECT customer_id FROM accounts WHERE phone_no = ?";
-   private static final String returnUserIdQuery = "SELECT customer_id FROM accounts WHERE account_number = ?";
-   private static final String returnCountQuery = "SELECT COUNT(*) FROM accounts";
-   private static final String passwordInsertQuery = "INSERT INTO password_history(customer_id,password) VALUES(?,?)";
+    private static final String insertUserQuery = "INSERT INTO accounts(account_number, name, balance,phone_no) VALUES(?,?,?,?)";
+    private static final String userQuery = "SELECT * FROM accounts";
+    //private static final String particularUserQuery = "SELECT * FROM accounts WHERE account_number = ?";
+    private static final String particularUserThroughIdQuery = "SELECT * FROM transactions WHERE customer_id = ?";
+    private static final String ifPresentQuery = "SELECT customer_id FROM accounts WHERE phone_no = ?";
+    private static final String returnUserIdQuery = "SELECT customer_id FROM accounts WHERE account_number = ?";
+    private static final String returnCountQuery = "SELECT COUNT(*) FROM accounts";
+    private static final String passwordInsertQuery = "INSERT INTO password_history(customer_id,password) VALUES(?,?)";
 
     //UPDATE accounts INNER JOIN password_history on accounts.customer_id = password_history.customer_id     GROUP BY password_id ORDER BY desc LIMIT 1 
     //String passwordIdInsertQuery = "UPDATE accounts SET accounts.user_password = password_history.password_id FROM accounts INNER JOIN password_history ON accounts.customer_id = password_history.customer_id  WHERE customer_id = ? GROUP BY customer_id ORDER BY created_at DESC LIMIT 1";
@@ -47,10 +51,24 @@ public class Database {
     
     String adminValidatorString = "SELECT admin_name FROM admins WHERE admin_email = ? AND admin_password = ?";
 
+    static Logger logger = Logger.getLogger("Database.class");
+    static{
+        try
+        {
+            FileHandler fh = new FileHandler("C://projects//website//src//main//java//com//zoho//database//db.log",true);
+            logger.addHandler(fh);
+            SimpleFormatter sfm = new SimpleFormatter();
+            fh.setFormatter(sfm);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    
     public Connection returnConnection() throws ClassNotFoundException, SQLException{
         Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection("jdbc:mysql://localhost:3306/banking-app-test", "root", "");
     }
+
     public void deleteHistory(int customerId) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
@@ -60,13 +78,16 @@ public class Database {
             pst.setInt(1, customerId);
             pst.executeUpdate();
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }
         finally{
+
             pst.close();
             con.close();
         }
     }
+
     //maintenance amount check
     public boolean checkLastMaintenanceAmount(int customerId) throws SQLException{
         Connection con = null;
@@ -83,6 +104,7 @@ public class Database {
                 }
             }
         }catch(Exception e ){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -90,6 +112,7 @@ public class Database {
         }
         return false;
     }
+
     //SEND ALL USERS
         public JSONArray sendAllUsers() throws SQLException{
             Connection con = null;
@@ -112,6 +135,7 @@ public class Database {
                 }
                 rst.close();
             }catch(Exception e){
+                logger.info(e.toString());
                 e.printStackTrace();
             }finally{
                 // pst.close();
@@ -119,6 +143,7 @@ public class Database {
             }
             return jArray;
         }
+
     //validate admin
     public String validateAdmin(String email, String password) throws SQLException{
         Connection con = null;
@@ -140,6 +165,7 @@ public class Database {
                 return adminName;
             }
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -169,6 +195,7 @@ public class Database {
                 return new User(customerId,accountNumber,userName,phoneNum,balance,tst);
             }
         }catch(Exception e ){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -176,6 +203,7 @@ public class Database {
         }
         return null;
     }
+
     //delete last passowrd
     public void deleteLastPassword(int customerId) throws SQLException{
         Connection con = null;
@@ -185,12 +213,15 @@ public class Database {
             pst = con.prepareStatement(deleteLastPassword);
             pst.setInt(1, customerId);
             pst.executeUpdate();
-        }catch(Exception e ){e.printStackTrace();
+        }catch(Exception e ){
+            logger.info(e.toString());
+            e.printStackTrace();
         }finally{
             pst.close();
             con.close();
         }
     }
+
     //checkif the entered password matches with the passwords from password history
     public boolean checkIfPasswordMatches(long accountNumber, String newPassword) throws SQLException{
 
@@ -207,21 +238,23 @@ public class Database {
             pst = con.prepareStatement(checkPasswordQuery);
             pst.setInt(1, id);
             ResultSet rst = pst.executeQuery();
-        System.out.println("im hereeeeeeeeee");
-             while(rst.next()){
+            System.out.println("im hereeeeeeeeee");
+            while(rst.next()){
             String password = rst.getString(1);
             rst.close();
             if(password.equals(newPassword))
             return true;
         }   
-    }catch(Exception e){
-        e.printStackTrace();
-    }finally{
-        pst.close();
-        con.close();
-    }
+        }catch(Exception e){
+            logger.info(e.toString());
+            e.printStackTrace();
+        }finally{
+            pst.close();
+            con.close();
+        }
         return false;
     }
+
     public JSONArray returnUserThroughId(int customer_id) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
@@ -242,15 +275,17 @@ public class Database {
             jArray.put(jObject);
             }
             rst.close();
+            }
+            catch(Exception e){
+                logger.info(e.toString());
+                e.printStackTrace();
+            }finally{
+                pst.close();
+                con.close();
+            }
+        return jArray;
     }
-    catch(Exception e){
-        e.printStackTrace();
-    }finally{
-        pst.close();
-        con.close();
-    }
-    return jArray;
-}
+
     //return balance according to account number
     public long returnBalance(long accountNumber) throws SQLException{
         Connection con = null;
@@ -265,6 +300,7 @@ public class Database {
             rst.close();
             return balance;
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -272,6 +308,7 @@ public class Database {
         }
         return 0;
     }
+
     public long generateAccountNumber() throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
@@ -287,6 +324,7 @@ public class Database {
             }
             return (11011*count + 11011);
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }
         finally{
@@ -295,6 +333,7 @@ public class Database {
         }
         return 1;
     }
+
     //return all accountNumber
     public JSONArray returnAvailableCustomers() throws SQLException{
         Connection con = null;
@@ -311,17 +350,17 @@ public class Database {
                 array.put(jObject);
             }
             rst.close();
-        }catch(Exception e){
-            e.printStackTrace();
-        }finally{
-            pst.close();
-            con.close();
-        }
+            }catch(Exception e){
+                logger.info(e.toString());
+                e.printStackTrace();
+            }finally{
+                pst.close();
+                con.close();
+            }
         System.out.println(array);
         return array;
-
-
     }
+
     //return id to a account number
     public int returnId(long accountNumber) throws SQLException{
         Connection con = null;
@@ -335,12 +374,13 @@ public class Database {
             int id = rst.getInt(1);
             rst.close();
             return id;
-        }catch(Exception e){
-            e.printStackTrace();
-        }finally{
-            pst.close();
-            con.close();
-        }
+            }catch(Exception e){
+                logger.info(e.toString());
+                e.printStackTrace();
+            }finally{
+                pst.close();
+                con.close();
+            }
         return -1;
     }
 
@@ -358,6 +398,7 @@ public class Database {
             if(count==3)
             return true;
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -377,6 +418,7 @@ public class Database {
             pst.setString(2, password);
             pst.executeUpdate();
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -394,15 +436,16 @@ public class Database {
             pst.setInt(2, customerId);
             pst.executeUpdate();
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
             con.close();
         }
     }
-//inserting the user 
-    public User insertUser(User user)throws Exception{
-        
+
+    //inserting the user 
+    public User insertUser(User user)throws Exception{ 
         System.out.println("im called");
         System.out.println(checkIfUserPresent(user.username, user.phoneNumber));
         if(checkIfUserPresent(user.username, user.phoneNumber))
@@ -433,6 +476,7 @@ public class Database {
             
             //INSERT PASSWORD_ID TO ACCOUNTS TABLE
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             
@@ -445,7 +489,8 @@ public class Database {
 
         return 0;
     }
-//check if the user exists already
+    
+    //check if the user exists already
     public boolean checkIfUserPresent(String username, long phoneNumber) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
@@ -465,6 +510,7 @@ public class Database {
             rst.close();
             return false;
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -496,6 +542,7 @@ public class Database {
         }
         return null;
     }
+   
     //check if the last trasaction is of maintenace fee
     public boolean returnIsMaintenance(int id) throws SQLException{
         Connection con = null;
@@ -512,6 +559,7 @@ public class Database {
             }
             rst.close();
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }
         finally {
@@ -548,6 +596,7 @@ public class Database {
                 
         }
      }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -555,6 +604,7 @@ public class Database {
         }
         return 0;
     }
+  
     public Timestamp returnCreatedAt(String query, int id) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
@@ -575,6 +625,7 @@ public class Database {
         }
         return null;
     } 
+
     //check the transaction and password date
     public boolean compareDates(long accountNumber) throws SQLException{
         int id = returnId(accountNumber);
@@ -602,6 +653,7 @@ public class Database {
             }
             rst.close();
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -611,6 +663,7 @@ public class Database {
         
         return false;
     } 
+    
     //update the accounts db
     public void updateAccountsDb(long balance, int id) throws SQLException{
         Connection con = null;
@@ -622,6 +675,7 @@ public class Database {
             pst.setInt(2, id);
             pst.executeUpdate();
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();
@@ -644,6 +698,7 @@ public class Database {
             updateAccountsDb(balance, customerId);
             return true;
         }catch(Exception e){
+            logger.info(e.toString());
             e.printStackTrace();
         }finally{
             pst.close();

@@ -1,0 +1,4 @@
+Jun 16, 2022 1:23:11 PM com.zoho.database.Database checkIfPasswordMatches
+INFO: java.sql.SQLException: Operation not allowed after ResultSet closed
+Jun 16, 2022 1:25:04 PM com.zoho.database.Database checkIfPasswordMatches
+INFO: java.sql.SQLException: Operation not allowed after ResultSet closed
