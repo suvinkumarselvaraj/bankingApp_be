@@ -4,7 +4,7 @@
 
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
-  <servlet>
+  <!-- <servlet>
     <servlet-name>
       new 
     </servlet-name>
@@ -19,9 +19,9 @@
     <url-pattern>
       /new
     </url-pattern>
-  </servlet-mapping>
-  <servlet>
-    <servlet-name>
+  </servlet-mapping> -->
+  <!--<servlet> -->
+    <!-- <servlet-name>
       open
     </servlet-name>
     <servlet-class>
@@ -252,9 +252,9 @@
       /account
     </url-pattern>
 
-  </servlet-mapping>
+  </servlet-mapping> -->
 
-  <servlet>
+  <!-- <servlet>
     <servlet-name>
       logout
     </servlet-name>
@@ -269,8 +269,8 @@
     <url-pattern>
       /logout
     </url-pattern>
-  </servlet-mapping>
-  
+  </servlet-mapping> -->
+<!--   
     <servlet>
       <servlet-name>
         issessionpresent
@@ -304,7 +304,7 @@
     <url-pattern>
       /isSameSession
     </url-pattern>   
-</servlet-mapping>
+</servlet-mapping> -->
 
 
     <session-config>

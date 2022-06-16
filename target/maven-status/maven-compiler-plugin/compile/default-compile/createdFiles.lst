@@ -1,5 +1,7 @@
 com\zoho\userClass\User.class
-com\zoho\web\UserServlet.class
 com\zoho\userClass\Admin.class
 com\zoho\database\Database.class
+com\zoho\database\db.log.lck
+com\zoho\web\UserServlet.class
+com\zoho\database\db.log
 com\zoho\web\AdminServlet.class

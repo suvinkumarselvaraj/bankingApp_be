@@ -3,6 +3,7 @@ package com.zoho.web;
 import com.zoho.database.Database;
 import com.zoho.userClass.User;
 
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +24,8 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
+
+@WebServlet(urlPatterns =  {"/new","/logout","/checktransactions","/availableCustomers","/accountdetails","/transactiondetails", "/isSessionPresent","/isSameSession","/openAccount","/changePassword","/transactions","/checkPassword","/transfer","/loginuser","/maintenancefee"})
 public class UserServlet extends HttpServlet{
    static Logger logger = Logger.getLogger("UserServlet.class");
     static{
