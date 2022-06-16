@@ -365,6 +365,7 @@ public class Database {
         }
         return false;
     }
+
     public void insertPasswordIntoPasswordHistory(int customerId,String password) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;
@@ -382,6 +383,7 @@ public class Database {
             con.close();
         }
     }
+    
     public void updateAccountPassword(int customerId) throws SQLException{
         Connection con = null;
         PreparedStatement pst = null;

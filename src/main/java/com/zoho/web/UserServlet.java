@@ -18,10 +18,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class UserServlet extends HttpServlet{
+    // static{
+    //     Logger logger = Logger.getLogger("UserServlet.class");
+
+    // }
     private static final long serialVersionUID = 1L;
     public void doGet(HttpServletRequest req, HttpServletResponse res){
         String action = req.getServletPath();
@@ -116,12 +120,11 @@ public class UserServlet extends HttpServlet{
           
           for (Cookie cookie : cookies) {
                 Cookie name = new Cookie(cookie.getName(), cookie.getValue());
-                name.setMaxAge(0);
+                
                 name.setMaxAge(0);
                 name.setDomain("localhost");
                 name.setPath("/");
-
-              res.addCookie(name);
+                res.addCookie(name);
               break;
             }
           }
@@ -238,7 +241,7 @@ public class UserServlet extends HttpServlet{
         //insert into accounts
         new Database().updateAccountsDb(balance, customerId); 
         //delete the history
-        deleteHistory(customerId);
+        // deleteHistory(customerId);
         jObj.put("balance",balance);
         jObj.put("status","success");
         }else{
@@ -250,7 +253,6 @@ public class UserServlet extends HttpServlet{
     }
 
     public void deleteHistory(int customerId) throws SQLException{
-       
        //delete the last record
         new Database().deleteHistory(customerId);
         
@@ -263,16 +265,6 @@ public class UserServlet extends HttpServlet{
             Collectors.joining("\n"));
             JSONObject jObj = new JSONObject(jsonBody);
             System.out.println(jObj);
-
-            //check if theres a session already present
-        // if(isSessionPresent(req,res))
-        //     //if the session is already present, then check if the session id is same
-        //     if(compareSession(req, res)){
-        //         jObj.put("isValidUser","success");
-        //     }
-        //     else
-        //     jObj.put("isValidUser","failure");
-        // }
 
             Long accountNumber = jObj.getLong("accountNumber");
             String password = jObj.getString("password");
@@ -401,8 +393,7 @@ public class UserServlet extends HttpServlet{
     }
     //decide the type of transaction and set the balance accordingly
     public void transactions(HttpServletRequest req, HttpServletResponse res) throws IOException, JSONException, SQLException{
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Headers", "*");
+      
         System.out.println("inside transation section");
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
         Collectors.joining("\n"));
@@ -424,8 +415,7 @@ public class UserServlet extends HttpServlet{
     }
     //check passwords 
     public void checkPassword(HttpServletRequest req, HttpServletResponse res) throws IOException, JSONException, SQLException{
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Headers", "*");
+       
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
         Collectors.joining("\n"));
         JSONObject jObj = new JSONObject(jsonBody);
@@ -447,8 +437,7 @@ public class UserServlet extends HttpServlet{
     //checkTransactions to force password change
     public void checkTransactions(HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException{
         System.out.println("inside transaction count area");
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Headers", "*");
+      
         JSONObject jObj = new JSONObject();
         Long accountNumber = Long.parseLong(req.getParameter("acc"));
         int transactionCount = new Database().returnTransactionCount(accountNumber);
@@ -480,8 +469,7 @@ public class UserServlet extends HttpServlet{
     }
 
     public void openAccount(HttpServletRequest req, HttpServletResponse res) throws Exception{
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Headers", "*");
+      
         String jsonBody = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(
                 Collectors.joining("\n"));
         JSONObject jObj = new JSONObject(jsonBody);
