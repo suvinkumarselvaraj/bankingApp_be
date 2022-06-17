@@ -283,6 +283,7 @@ public class UserServlet extends HttpServlet{
             User loggedUser = new Database().loginValidate(accountNumber, ePassword);
 
             if(loggedUser!=null){
+                System.out.println(loggedUser.balance);
                 jObj.put("status", "success");
                 jObj.put("username", loggedUser.username);
                 jObj.put("balance", loggedUser.balance);
@@ -458,6 +459,7 @@ public class UserServlet extends HttpServlet{
         Long accountNumber = Long.parseLong(req.getParameter("acc"));
         int transactionCount = new Database().returnTransactionCount(accountNumber);
         if(transactionCount == 5){
+            jObj.put("maintenance","true");
             //CHECKING IF THE LAST TRANSACTION DATE IS GREATER THAN LAST CHANGED PASSWORD
             if(new Database().compareDates(accountNumber)){
                     //then set the object status to 5
@@ -467,6 +469,7 @@ public class UserServlet extends HttpServlet{
             }
         }else
         if(transactionCount == 10){
+            jObj.put("maintenance","true");
             if(!new Database().checkLastMaintenanceAmount(new Database().getUserid(accountNumber)))
                 {
                     jObj.put("status5","false");
@@ -475,6 +478,7 @@ public class UserServlet extends HttpServlet{
                 }
         }
         else{
+            jObj.put("status","failure");
             System.out.println("inside failure area");
         }
         res.getWriter().write(jObj.toString());

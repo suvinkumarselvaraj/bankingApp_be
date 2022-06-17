@@ -1,5 +1,6 @@
 package com.zoho.web;
 
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,19 +15,24 @@ import org.json.JSONObject;
 import com.zoho.database.Database;
 import java.util.stream.Collectors;
 
-public class AdminServlet extends HttpServlet {
-    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException{
-        String path = req.getServletPath();
-        switch (path) {
-    
-        case "/allUsers":
-                try {
-                    allUsers(req,res);
-                } catch (SQLException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-    break;
+@WebServlet(urlPatterns = {
+    "/allUsers",
+    "/admin/login"
+})
+
+    public class AdminServlet extends HttpServlet {
+        public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException{
+            String path = req.getServletPath();
+            switch (path) {
+        
+            case "/allUsers":
+                    try {
+                        allUsers(req,res);
+                    } catch (SQLException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+            break;
         }
     }
 
